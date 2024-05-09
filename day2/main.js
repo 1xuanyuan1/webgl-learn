@@ -55,19 +55,22 @@ function main () {
   var program = createProgram(gl, vertexShader, fragmentShader);
   
   var positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+  var resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+  var colorUniformLocation = gl.getUniformLocation(program, "u_color");
   
   var positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
 
   const positions = [
-    0, 0,
-    0, 0.5,
-    0.7, 0,
+    10, 20,
+    80, 20,
+    10, 30,
+    10, 30,
+    80, 20,
+    80, 30,
   ]
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
   
-  console.log(program)
-
 
   webglUtils.resizeCanvasToDisplaySize(gl.canvas);
 
@@ -96,13 +99,68 @@ function main () {
   gl.vertexAttribPointer(
       positionAttributeLocation, size, type, normalize, stride, offset);
 
+  // 设置全局变量 分辨率
+  gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+
   // 绘制
-  var primitiveType = gl.TRIANGLES;
-  var offset = 0;
-  var count = 3;
-  gl.drawArrays(primitiveType, offset, count);
+  // var primitiveType = gl.TRIANGLES;
+  // var offset = 0;
+  // var count = 6;
+  // gl.drawArrays(primitiveType, offset, count);
+
+    // 绘制50个随机颜色矩形
+  for (var ii = 0; ii < 50; ++ii) {
+    // 创建一个随机矩形
+    // 并将写入位置缓冲
+    // 因为位置缓冲是我们绑定在
+    // `ARRAY_BUFFER`绑定点上的最后一个缓冲
+    setRectangle(
+        gl, randomInt(300), randomInt(300), randomInt(300), randomInt(300));
+  
+    // 设置一个随机颜色
+    gl.uniform4f(colorUniformLocation, Math.random(), Math.random(), Math.random(), 1);
+  
+    // 绘制矩形
+    gl.drawArrays(gl.TRIANGLES, 0, 6);
+    }
 }
 
+/**
+ * 返回 0 到 range 范围内的随机整数
+ * @param {number} range 
+ * @returns 
+ */
+function randomInt(range) {
+  return Math.floor(Math.random() * range);
+}
+
+/**
+ * 用参数生成矩形顶点并写进缓冲
+ * @param {WebGLRenderingContext} gl 
+ * @param {number} x 
+ * @param {number} y 
+ * @param {number} width 
+ * @param {number} height 
+ */
+function setRectangle(gl, x, y, width, height) {
+  var x1 = x;
+  var x2 = x + width;
+  var y1 = y;
+  var y2 = y + height;
+ 
+  // 注意: gl.bufferData(gl.ARRAY_BUFFER, ...) 将会影响到
+  // 当前绑定点`ARRAY_BUFFER`的绑定缓冲
+  // 目前我们只有一个缓冲，如果我们有多个缓冲
+  // 我们需要先将所需缓冲绑定到`ARRAY_BUFFER`
+ 
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+     x1, y1,
+     x2, y1,
+     x1, y2,
+     x1, y2,
+     x2, y1,
+     x2, y2]), gl.STATIC_DRAW);
+}
 
 (function(){
   main()
